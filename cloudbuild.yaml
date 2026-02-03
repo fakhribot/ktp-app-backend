@@ -41,7 +41,7 @@ steps:
       - 'backend=asia-southeast2-docker.pkg.dev/eikon-dev-ai-team/bjb-poc/backend:$SHORT_SHA'
     env:
       - 'CLOUDSDK_COMPUTE_ZONE=asia-southeast2' # Atau region jika cluster regional
-      - 'CLOUDSDK_CONTAINER_CLUSTER=bjb-cluster-poc'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=bjb-poc-cluster'
 
 options:
   logging: CLOUD_LOGGING_ONLY
