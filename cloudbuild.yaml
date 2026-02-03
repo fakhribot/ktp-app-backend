@@ -1,0 +1,47 @@
+steps:
+# Builds artifacts
+
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        docker build -t asia-southeast2-docker.pkg.dev/eikon-dev-ai-team/bjb-poc/backend:$SHORT_SHA \
+                     -t asia-southeast2-docker.pkg.dev/eikon-dev-ai-team/bjb-poc/backend:latest .
+
+# Push into registry
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia-southeast2-docker.pkg.dev/eikon-dev-ai-team/bjb-poc/backend:$SHORT_SHA']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia-southeast2-docker.pkg.dev/eikon-dev-ai-team/bjb-poc/backend:latest']
+
+# Vulnerability Testing using Trivy
+
+  # - name: 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/bjb-repo/trivy:latest'
+  #   entrypoint: 'trivy'
+  #   args:
+  #   - 'image'
+  #   - '--severity'
+  #   - 'CRITICAL'       # Hanya memblokir jika ada level CRITICAL
+  #   - '--exit-code'
+  #   - '1'              # Jika ada vuln, exit code 1 (Pipeline Gagal & Stop)
+  #   - '--no-progress'  # Supaya log bersih
+  #   - '--ignore-unfixed' # Abaikan vuln yang belum ada patch-nya (supaya tidak false positive)
+  #   - 'asia-southeast2-docker.pkg.dev/eikon-dev-ai-team/bjb-poc/backend:$SHORT_SHA'
+
+# Deploy to GKE Cluster
+
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'set'
+      - 'image'
+      - 'deployment/backend'
+      - 'backend=asia-southeast2-docker.pkg.dev/eikon-dev-ai-team/bjb-poc/backend:$SHORT_SHA'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=asia-southeast2' # Atau region jika cluster regional
+      - 'CLOUDSDK_CONTAINER_CLUSTER=bjb-cluster-poc'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
