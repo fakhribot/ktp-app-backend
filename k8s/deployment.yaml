@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: backend
+        image: asia-southeast2-docker.pkg.dev/eikon-dev-ai-team/bjb-poc/backend@sha256:abc60e151f738c66bb64abeee8dbe40989718145450a6ad6df2fe52e89d3e4a2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8005 
+        
+        # Inject Config & Secret
+        envFrom:
+        - configMapRef:
+            name: bjb-app-config
+        - secretRef:
+            name: bjb-app-secret
+            
+        # HEALTH CHECKS
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8005
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8005
+          initialDelaySeconds: 15
+          periodSeconds: 20
+
+        resources:
+          requests:
+            cpu: "100m" 
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+  ports:
+  - protocol: TCP
+    port: 8005
+    targetPort: 8005
