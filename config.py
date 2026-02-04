@@ -1,17 +1,30 @@
 import os
+import urllib.parse  # Tambahkan ini untuk handle karakter spesial di password
 from dotenv import load_dotenv
 
 load_dotenv()
 
 class Config:
-    # Primary Database (Write)
+    # 1. Ambil env vars
     DB_USER = os.getenv('POSTGRES_USER')
     DB_PASS = os.getenv('POSTGRES_PASSWORD')
     DB_HOST = os.getenv('POSTGRES_HOST')
     DB_PORT = os.getenv('POSTGRES_PORT')
     DB_NAME = os.getenv('POSTGRES_DB')
-    
-    SQLALCHEMY_DATABASE_URI = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+    # 2. ENCODE PASSWORD (PENTING!)
+    # Ini mencegah error auth jika password mengandung karakter seperti '@', ':', dll.
+    _encoded_pass = urllib.parse.quote_plus(DB_PASS) if DB_PASS else ""
+
+    # 3. Definisikan SSL Mode
+    # Gunakan 'require' untuk Cloud SQL Private IP agar enkripsi aktif
+    ssl_args = "?sslmode=require"
+
+    # Primary Database (Write)
+    # Perhatikan penambahan {ssl_args} di akhir
+    SQLALCHEMY_DATABASE_URI = (
+        f"postgresql://{DB_USER}:{_encoded_pass}@{DB_HOST}:{DB_PORT}/{DB_NAME}{ssl_args}"
+    )
 
     # Replica Database (Read)
     REP_USER = os.getenv('POSTGRES_USER_REPLICA') or DB_USER
@@ -20,8 +33,11 @@ class Config:
     REP_PORT = os.getenv('POSTGRES_PORT_REPLICA') or DB_PORT
     REP_NAME = os.getenv('POSTGRES_DB_REPLICA') or DB_NAME
 
+    # Encode password replica juga
+    _encoded_rep_pass = urllib.parse.quote_plus(REP_PASS) if REP_PASS else ""
+
     SQLALCHEMY_BINDS = {
-        'replica': f"postgresql://{REP_USER}:{REP_PASS}@{REP_HOST}:{REP_PORT}/{REP_NAME}"
+        'replica': f"postgresql://{REP_USER}:{_encoded_rep_pass}@{REP_HOST}:{REP_PORT}/{REP_NAME}{ssl_args}"
     }
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False

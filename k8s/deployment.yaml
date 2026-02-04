@@ -24,10 +24,8 @@ spec:
         
         # Inject Config & Secret
         envFrom:
-        - configMapRef:
-            name: bjb-app-config
         - secretRef:
-            name: bjb-app-secret
+            name: app-secrets
             
         # HEALTH CHECKS
         readinessProbe:
