@@ -11,7 +11,8 @@ class Config:
     DB_PORT = os.getenv('POSTGRES_PORT')
     DB_NAME = os.getenv('POSTGRES_DB')
     
-    SQLALCHEMY_DATABASE_URI = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    # FIX 1: Tambahkan ?sslmode=require di akhir connection string
+    SQLALCHEMY_DATABASE_URI = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
 
     # Replica Database (Read)
     REP_USER = os.getenv('POSTGRES_USER_REPLICA') or DB_USER
@@ -20,8 +21,9 @@ class Config:
     REP_PORT = os.getenv('POSTGRES_PORT_REPLICA') or DB_PORT
     REP_NAME = os.getenv('POSTGRES_DB_REPLICA') or DB_NAME
 
+    # FIX 2: Tambahkan juga di Replica
     SQLALCHEMY_BINDS = {
-        'replica': f"postgresql://{REP_USER}:{REP_PASS}@{REP_HOST}:{REP_PORT}/{REP_NAME}"
+        'replica': f"postgresql://{REP_USER}:{REP_PASS}@{REP_HOST}:{REP_PORT}/{REP_NAME}?sslmode=require"
     }
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
