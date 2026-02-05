@@ -40,7 +40,7 @@ steps:
       - 'deployment/backend'
       - 'backend=asia-southeast2-docker.pkg.dev/poc-3-pt-eikon/bjb-poc/backend:$SHORT_SHA'
     env:
-      - 'CLOUDSDK_COMPUTE_ZONE=asia-southeast2' # Atau region jika cluster regional
+      - 'CLOUDSDK_COMPUTE_REGION=asia-southeast2' # Atau region jika cluster regional
       - 'CLOUDSDK_CONTAINER_CLUSTER=poc-cluster'
 
 options:
