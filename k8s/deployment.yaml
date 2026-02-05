@@ -14,10 +14,12 @@ spec:
       labels:
         app: backend
     spec:
+      nodeSelector:
+        role: backend
       serviceAccountName: default
       containers:
       - name: backend
-        image: asia-southeast2-docker.pkg.dev/eikon-dev-ai-team/bjb-poc/backend@sha256:abc60e151f738c66bb64abeee8dbe40989718145450a6ad6df2fe52e89d3e4a2
+        image: asia-southeast2-docker.pkg.dev/poc-3-pt-eikon/bjb-poc/backend@sha256:111e5e8bcac7500830f6bcd4ff0c20d71aa8b3d4b82b699ca79dee5484d5dc61
         imagePullPolicy: Always
         ports:
         - containerPort: 8005 
@@ -28,23 +30,23 @@ spec:
             name: app-secrets
             
         # HEALTH CHECKS
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: 8005
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8005
-          initialDelaySeconds: 15
-          periodSeconds: 20
+        # readinessProbe:
+        #   httpGet:
+        #     path: /healthz
+        #     port: 8005
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 10
+        # livenessProbe:
+        #   httpGet:
+        #     path: /healthz
+        #     port: 8005
+        #   initialDelaySeconds: 15
+        #   periodSeconds: 20
 
         resources:
           requests:
-            cpu: "100m" 
-            memory: "128Mi"
+            cpu: "200m" 
+            memory: "256Mi"
           limits:
             cpu: "500m"
             memory: "512Mi"
