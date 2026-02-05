@@ -38,6 +38,7 @@ class KtpRecord(db.Model):
     occupation = db.Column(db.String(100))
     citizenship = db.Column(db.String(5), default='WNI')
     expiry_date = db.Column(db.String(20), default='SEUMUR HIDUP')
+    registration_date = db.Column(db.Date)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
     updated_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -58,6 +59,7 @@ class KtpRecord(db.Model):
             'occupation': self.occupation,
             'citizenship': self.citizenship,
             'expiry_date': self.expiry_date,
+            'registration_date': self.registration_date.isoformat() if self.registration_date else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

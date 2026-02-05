@@ -4,18 +4,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import or_
 import jwt
 import datetime
+import asyncio
 from functools import wraps
 from config import Config
 from models import db, KtpRecord, User
+from agent import process_document
 
 app = Flask(__name__)
 app.config.from_object(Config)
 CORS(app)
 db.init_app(app)
-
-@app.route('/healthz', methods=['GET'])
-def health_check():
-    return jsonify({'status': 'healthy'}), 200
 
 def token_required(f):
     @wraps(f)
@@ -141,6 +139,33 @@ def get_one_ktp(current_user, nik):
         return jsonify({'message': 'No KTP found!'}), 404
     return jsonify({'ktp_record': ktp.to_dict()})
 
+@app.route('/api/ocr/extract', methods=['POST'])
+@token_required
+def extract_ktp_data(current_user):
+    if 'file' not in request.files:
+        return jsonify({'message': 'No file part'}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'message': 'No selected file'}), 400
+
+    if file:
+        try:
+            # Read file into bytes
+            file_bytes = file.read()
+            mime_type = file.mimetype
+
+
+            extracted_data = asyncio.run(process_document(
+                file_bytes=file_bytes, 
+                mime_type=mime_type, 
+                user_id=str(current_user.id)
+            ))
+            
+            return jsonify({'message': 'Extraction successful', 'data': extracted_data})
+        except Exception as e:
+            return jsonify({'message': f'Processing error: {str(e)}'}), 500
+
 @app.route('/api/ktp', methods=['POST'])
 @token_required
 def create_ktp(current_user):
@@ -162,7 +187,8 @@ def create_ktp(current_user):
             marital_status=data.get('marital_status'),
             occupation=data.get('occupation'),
             citizenship=data.get('citizenship', 'WNI'),
-            expiry_date=data.get('expiry_date', 'SEUMUR HIDUP')
+            expiry_date=data.get('expiry_date', 'SEUMUR HIDUP'),
+            registration_date=datetime.datetime.strptime(data['registration_date'], '%Y-%m-%d').date() if data.get('registration_date') else None
         )
         db.session.add(new_ktp)
         db.session.commit()
@@ -196,6 +222,9 @@ def update_ktp(current_user, nik):
         ktp.occupation = data.get('occupation', ktp.occupation)
         ktp.citizenship = data.get('citizenship', ktp.citizenship)
         ktp.expiry_date = data.get('expiry_date', ktp.expiry_date)
+        if 'registration_date' in data:
+            val = data['registration_date']
+            ktp.registration_date = datetime.datetime.strptime(val, '%Y-%m-%d').date() if val else None
         
         db.session.commit()
         return jsonify({'message': 'KTP record updated!', 'ktp_record': ktp.to_dict()})
