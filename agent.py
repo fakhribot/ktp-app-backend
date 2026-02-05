@@ -8,7 +8,7 @@ import time
 
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
-from google.adk.agents import LlmAgent, SequentialAgent
+from google.adk.agents import LlmAgent
 from google.adk.models.google_llm import Gemini
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models import LlmResponse, LlmRequest
