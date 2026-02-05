@@ -17,8 +17,6 @@ from google import genai
 from google.genai import types
 from google.genai.types import HttpRetryOptions
 
-from toolbox_core import ToolboxSyncClient
-
 from dotenv import load_dotenv
 
 today_date = datetime.today().strftime("%d-%m-%Y")
@@ -97,7 +95,7 @@ def validate_ktp_callback(
 
     4. **Format Data**:
     - 'nik': String, 16 digit, tanpa spasi atau karakter khusus.
-    - 'birth_date': String dalam format 'DD-MM-YYYY'.
+    - 'birth_date': String dalam format 'YYYY-MM-DD'.
     - Jika kode wilayah NIK, logika tanggal, atau usia tidak valid,
         tandai atau perbaiki berdasarkan sumber paling tepercaya (hasil pencarian).
 
@@ -144,7 +142,7 @@ def validate_ktp_callback(
         return None 
 
     return None
-    
+
 class KTPExtractionResult(BaseModel):
     nik: str = Field(description="Nomor Induk Kependudukan (16 digits)")
     full_name: str = Field(description="Nama lengkap (Full Name)")
@@ -174,10 +172,14 @@ extraction_agent = LlmAgent(
     "Tujuan Anda adalah mengekstrak field tertentu dari gambar atau teks KTP yang diberikan.\n\n"
     "1. Analisis dokumen KTP yang disediakan.\n"
     "2. Ekstrak field yang didefinisikan dalam skema output secara akurat.\n"
-    "3. Pastikan tanggal diformat sebagai DD-MM-YYYY jika memungkinkan.\n"
-    "4. Isi dengan NULL jika informasi tidak tersedia atau tidak dapat diekstrak.\n"
-    "5. Field expiry_date harus SELALU diisi dengan 'SEUMUR HIDUP'.\n"
-    "6. Kembalikan HANYA objek JSON akhir yang sesuai dengan skema KTPExtractionResult."
+    "3. **Tempat & Tanggal Lahir:** Di KTP, ini tertulis dalam satu baris (contoh: 'JAKARTA, 17-08-1945').\n"
+        "   - Anda WAJIB memisahkan teks ini.\n"
+        "   - Teks sebelum koma/angka adalah 'birth_place'.\n"
+        "   - Angka tanggal (DD-MM-YYYY) adalah 'birth_date'.\n"
+    "4. Pastikan tanggal diformat sebagai YYYY-MM-DD jika memungkinkan.\n"
+    "5. Isi dengan NULL jika informasi tidak tersedia atau tidak dapat diekstrak.\n"
+    "6. Field expiry_date harus SELALU diisi dengan 'SEUMUR HIDUP'.\n"
+    "7. Kembalikan HANYA objek JSON akhir yang sesuai dengan skema KTPExtractionResult."
 ),
     output_schema=KTPExtractionResult,
     output_key='extraction_result',
